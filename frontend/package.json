@@ -1,0 +1,14 @@
+{
+  "name": "wallet-drainer-frontend",
+  "version": "1.0.0",
+  "main": "index.html",
+  "scripts": {
+    "start": "react-scripts start"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "web3": "^1.7.0"
+  }
+}
